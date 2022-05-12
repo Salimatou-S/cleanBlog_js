@@ -13,10 +13,17 @@
         <nav>
             <button id="button_posts">Articles</button>
             <button id="button_categories">Categories</button>
-            <button id="button_users">Users</button>
-            <div id="loader" style="display:none"><img src="loader.gif" alt=""> </div>
-            <div id="root"></div>
+            <button id="button_users" style="display:none">Users</button>
+            <button id="button_login" >Login</button>
+            <button id="button_logout" style="display:none" >Logout</button>
         </nav>
+        <nav id="nav_cat"></nav>
+        <div id="loader" style="display:none"><img src="loader.gif" alt=""> </div>
+        <div id="root"></div>
+        
+
+        
+
     </div>
 
 
@@ -33,20 +40,169 @@
                 return parent.appendChild(el)
             }
 
-            const api = 'http://localhost:8000/api' // stocker dans une constante
+            const api = 'http://localhost:8000' // stocker dans une constante
 
             const root = document.getElementById('root')
 
+            const nav_cat = document.getElementById('nav_cat')
+
             const loader = document.getElementById('loader')
+
+            const users = document.getElementById('button_users')
+
+            const login = document.getElementById('button_login')
+
+            const logout = document.getElementById('button_logout')
+           
+
+            const token = localStorage.getItem('token')
+            if(token && token !='undefined') {
+                document.getElementById('button_users').style.display ="inline"
+                document.getElementById('button_login').style.display ="none"
+                document.getElementById('button_logout').style.display ="inline"
+            }
+
+
+            console.log('BEGIN CAT')
+
+            fetch(api + '/api/categories')
+
+            .then (response =>{
+                // console.log('response = ' + response)
+                return response.json()
+            })
+
+            .then (data =>{
+                // console.log('Data = ' + data)
+                let categories = data['hydra:member']
+                // console.log(categories)
+                return categories.map(function (category) {
+                    // console.log('Category = ' , category)
+                    
+
+                    // let h2 = createNode('h2')
+                    // append(root, h2)
+                    // h2.innerHTML = `${category.id}`
+                    
+                    let a = createNode('a')
+                    append(nav_cat, a)
+                    a.innerHTML = `${category.name}`
+                    a.href = api + `/api/categories/${category.id}`
+                    a.classList.add('btn', 'btn-primary', 'm-1')
+                    a.addEventListener('click', function (event){
+                        loader.style.display='block'
+                        event.preventDefault()
+
+                        fetch(a.href)
+
+                        .then (response =>{
+                            return response.json()
+                        })
+
+                        .then (data =>{
+                            root.innerHTML = ''
+                            h2 = createNode('h2')
+                            append(root, h2)
+                            h2.innerHTML = `${category.name} :`
+
+                            data.posts.map(function (post) {
+                                console.log('Post =', post)
+                            
+                                fetch(api + post)
+
+                                .then (response =>{
+                                    return response.json()
+                                })
+                                .then (post =>{
+                                    console.log('Post= ', post)
+
+
+                                    let h3 = createNode('h3')
+                                    append(root, h3)
+                                    h3.innerHTML = `${post.title}` 
+
+                                    let div = createNode('div')
+                                    append(root, div)
+                                    div.innerHTML = `${post.createdAt}`
+
+
+                                    let img = createNode('img')
+                                    append(root, img)
+                                    img.src = `${post.image}`
+
+                                    div = createNode('div')
+                                    append(root, div)
+                                    div.innerHTML = `${post.content.substring(0,1000)}...`
+                                })
+                            })
+                            loader.style.display='none'
+                        })
+                    
+                    // div = createNode('div')
+                    // append(root, div)
+                    // div.innerHTML = `${category.slug}`
+
+                })
+                })
+
+            console.log('END CAT')
+            })
+            // console.log('BEGIN NAVCATEGORIES')
+            //     fetch(api + '/api/categories')
+            //     .then(response => {
+            //         //console.log('response =', response )
+            //         return response.json()
+            //     })
+
+            //     .then (data => {
+            //         console.log('Data = ', data)
+            //         let categories = data['hydra:member']
+            //         console.log('Categories =', categories)
+            //         return categories.map(function (category) {
+            //             console.log('Category =', category)
+            //             //console.log('inner =', document.getElementById("root"))
+            //             let element = document.createElement('h2')
+            //             //document.getElementById("root").innerHTML = "test"
+            //             //element.innerHTML = "test"
+
+            //             let a = createNode('a')
+            //             append(nav_cat, a)
+            //             a.innerHTML = `${category.name}`
+            //             a.href =`/api/categories/${category.name}`
+            //             a.classList.add('btn','btn-primary','m-1') // synthaxe en combinant les lignes d'en dessous pour en ecrire une seule
+            //             /* a.classList.add('btn-primary')
+            //             a.classList.add('m-1') */
+            //             a.addEventListener('click', function(event){
+            //                 event.preventDefault()
+            //                 fetch(a.href)
+            //                 .then(response => {
+                   
+            //                 return response.json()
+            //                 })
+
+            //                 .then (data =>{
+            //                     root.innerHTML = ''
+            //                     h2 = createNode('h2')
+            //                     append(root, h2)
+            //                     h2.innerHTML = `${category.name} :`
+            //                  })
+
+            //             })
+            //         })
+                   
+            
+            //     })
+            //     console.log('END NAVCATEGORIES')
+
            
             document.getElementById("button_posts").addEventListener("click", function (){
                 console.log('BEGIN POSTS')
-            root.innerHTML = ""
-            loader.style.display='block'
+                root.innerHTML = ""
+                loader.style.display='block'
                 
 
                 //fetch('http://localhost:8000/api/posts') on va stocker http://localhost:8000/api en constante qu'on declare plus haut et appeller en cas de besoin
-                fetch(api + '/posts')
+                fetch(api + '/api/posts')
                 .then(response => {
                     console.log('response =', response )
                     return response.json()
@@ -91,7 +247,7 @@
             root.innerHTML = ""
             loader.style.display = 'block'
                 //fetch('http://localhost:8000/api/posts') on va stocker http://localhost:8000/api en constante qu'on declare plus haut et appeller en cas de besoin
-                fetch(api + '/categories')
+                fetch(api + '/api/categories')
                 .then(response => {
                     console.log('response =', response )
                     return response.json()
@@ -131,7 +287,16 @@
                 console.log('BEGIN USERS')
             root.innerHTML = ""
             loader.style.display = 'block'
-                fetch(api + '/users')
+            
+
+                const token = localStorage.getItem('token')
+                console.log("Token-", token)
+                fetch(api + '/api/users', {
+                    headers: {
+                        'Content-Type':'application/json',
+                        'authorization': 'Bearer ' + token
+                    }
+                })
                 .then(response => {
                     console.log('response =', response )
                     return response.json()
@@ -170,6 +335,52 @@
                    
             })
                 console.log('END USERS')
+            })
+
+            document.getElementById("button_login").addEventListener("click", function (){
+                console.log('BEGIN LOGIN')
+                root.innerHTML = ""
+                loader.style.display='block'
+                users.style.display='inline-block'
+                /* login.style.display = 'none'
+                logout.style.display = 'inline-block' */
+
+                
+                const email = prompt ("Email")
+                const password = prompt ("Password")
+
+                fetch(api + '/api/login_check', {
+                    headers: {
+                        'Accept':'application/json',
+                        'Content-Type':'application/json'
+                    },
+                    method: 'POST',
+                    body: JSON.stringify({
+                        'email': email,
+                        'password': password
+                    })
+                })
+                .then(response => {
+                    console.log('response =', response )
+                    return response.json()
+                })
+                .then (data => {
+                    console.log('Data = ', data)
+                    localStorage.setItem('token', data.token)
+                    loader.style.display = 'none'
+                    document.getElementById('button_users').style.display ='inline'
+
+               })
+                console.log('END LOGIN')
+            })
+
+
+            document.getElementById("button_logout").addEventListener("click", function (){
+                console.log('BEGIN LOGOUT')
+                root.innerHTML = ""
+                localStorage.setItem('token', 'undifined')
+                //logout.style.display ='none'
+                console.log('END LOGOUT')
             })
 
 
